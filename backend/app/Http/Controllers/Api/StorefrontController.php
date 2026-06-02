@@ -13,6 +13,13 @@ use Illuminate\Http\Request;
 
 class StorefrontController extends Controller
 {
+    public function siteStatus(): JsonResponse
+    {
+        return response()->json([
+            'maintenance_mode' => SiteSetting::getValue('maintenance_mode', '1') === '1',
+        ]);
+    }
+
     public function home(): JsonResponse
     {
         return response()->json([
@@ -106,6 +113,7 @@ class StorefrontController extends Controller
     private function publicSettings(): array
     {
         return [
+            'maintenance_mode' => SiteSetting::getValue('maintenance_mode', '1') === '1',
             'shipping_fee' => (float) SiteSetting::getValue('shipping_fee', '5.99'),
             'free_shipping_threshold' => (float) SiteSetting::getValue('free_shipping_threshold', '70'),
             'tree_threshold' => 50,

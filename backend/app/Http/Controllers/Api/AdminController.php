@@ -155,15 +155,19 @@ class AdminController extends Controller
     {
         if ($request->isMethod('put')) {
             foreach ($request->all() as $key => $value) {
+                if ($key === 'maintenance_mode') {
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
+                }
+
                 SiteSetting::putValue($key, $value, str_contains($key, 'key') || str_contains($key, 'secret') || str_contains($key, 'password'));
             }
         }
 
-        $plain = ['shipping_fee', 'free_shipping_threshold', 'stripe_publishable_key'];
+        $plain = ['maintenance_mode', 'shipping_fee', 'free_shipping_threshold', 'stripe_publishable_key'];
         $secret = ['stripe_secret_key', 'smtp2go_api_key', 'smtp2go_password', 'mailchimp_api_key', 'mailchimp_list_id', 'tree_nation_api_key', 'shiptheory_api_key'];
 
         return response()->json([
-            'settings' => collect($plain)->mapWithKeys(fn ($key) => [$key => SiteSetting::getValue($key)])->all(),
+            'settings' => collect($plain)->mapWithKeys(fn ($key) => [$key => $key === 'maintenance_mode' ? SiteSetting::getValue($key, '1') === '1' : SiteSetting::getValue($key)])->all(),
             'secrets' => collect($secret)->mapWithKeys(fn ($key) => [$key => filled(SiteSetting::getValue($key))])->all(),
         ]);
     }

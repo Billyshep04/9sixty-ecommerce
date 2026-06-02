@@ -95,6 +95,7 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach ([
+            'maintenance_mode' => '1',
             'shipping_fee' => '5.99',
             'free_shipping_threshold' => '70',
             'stripe_publishable_key' => '',

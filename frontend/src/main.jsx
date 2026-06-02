@@ -90,6 +90,7 @@ function App() {
   const [path, setPath] = useState(location.pathname);
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart') || '[]'));
   const [auth, setAuth] = useState(() => JSON.parse(localStorage.getItem('auth') || 'null'));
+  const [siteStatus, setSiteStatus] = useState({ maintenance_mode: true });
 
   const nav = (to) => {
     history.pushState(null, '', to);
@@ -104,7 +105,15 @@ function App() {
     localStorage.setItem('cart', JSON.stringify(next));
   };
 
-  const common = { nav, cart, setCart, auth, setAuth, addToCart };
+  const refreshSiteStatus = () => api('/api/site-status').then((r) => r.json()).then(setSiteStatus).catch(() => {});
+
+  useEffect(() => {
+    refreshSiteStatus();
+  }, []);
+
+  const isAdmin = auth?.user?.role === 'admin';
+  const authPath = path === '/account' || path === '/admin';
+  const common = { nav, cart, setCart, auth, setAuth, addToCart, refreshSiteStatus };
   let page = <Home {...common} />;
   if (path.startsWith('/shop')) page = <Shop {...common} />;
   if (path.startsWith('/product/')) page = <ProductPage {...common} slug={path.split('/').pop()} />;
@@ -117,7 +126,23 @@ function App() {
   if (path === '/admin') page = <Admin {...common} />;
   if (['/about', '/our-story', '/contact', '/privacy-policy', '/terms', '/shipping-returns'].includes(path)) page = <ContentPage path={path} {...common} />;
 
+  if (siteStatus.maintenance_mode && !isAdmin && !authPath) {
+    return <MaintenancePage nav={nav} />;
+  }
+
   return <><Header nav={nav} cart={cart} auth={auth} /><main>{page}</main><Footer nav={nav} /></>;
+}
+
+function MaintenancePage({ nav }) {
+  return <main className="maintenance-page">
+    <section className="maintenance-panel">
+      <button className="maintenance-logo" onClick={() => nav('/account')}>9SIXTY</button>
+      <p className="eyebrow">Private Preview</p>
+      <h1>Maintenance In Progress</h1>
+      <p>We are preparing the 9SIXTY launch experience. The storefront is temporarily offline while the final product and checkout setup is completed.</p>
+      <button className="gold" onClick={() => nav('/account')}>Admin Login</button>
+    </section>
+  </main>;
 }
 
 function Header({ nav, cart, auth }) {
@@ -316,13 +341,15 @@ function Account({ auth, setAuth, nav }) {
   return <section className="page-wrap narrow"><h1>Customer Account</h1><div className="tabs"><button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setForm({ ...form, email: 'customer@9sixty.test' }); }}>Login</button><button className={mode === 'register' ? 'active' : ''} onClick={() => setMode('register')}>Register</button><button className={mode === 'admin' ? 'active' : ''} onClick={() => { setMode('admin'); setForm({ ...form, email: 'admin@9sixty.test' }); }}>Admin Login</button></div><form className="form-grid">{mode === 'register' && <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />}<input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /><input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />{error && <p className="form-error">{error}</p>}<button type="button" className="gold" onClick={login}>{mode === 'register' ? 'Create Account' : 'Sign In'}</button></form></section>;
 }
 
-function Admin({ auth, setAuth, nav }) {
+function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [editing, setEditing] = useState(null);
   const [activeSection, setActiveSection] = useState('Products');
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
+  const [settingsForm, setSettingsForm] = useState({ maintenance_mode: true, shipping_fee: '5.99', free_shipping_threshold: '70', stripe_publishable_key: '' });
+  const [secretStatus, setSecretStatus] = useState({});
   const [message, setMessage] = useState('');
   const isAdmin = auth?.user?.role === 'admin';
 
@@ -336,6 +363,10 @@ function Admin({ auth, setAuth, nav }) {
     if (!isAdmin) return;
     api('/api/admin/dashboard', {}, auth.token).then((r) => r.json()).then(setDashboard);
     api('/api/admin/products', {}, auth.token).then((r) => r.json()).then((data) => setProducts(data.products?.data || []));
+    api('/api/admin/settings', {}, auth.token).then((r) => r.json()).then((data) => {
+      setSettingsForm((current) => ({ ...current, ...(data.settings || {}) }));
+      setSecretStatus(data.secrets || {});
+    });
     loadCategories();
   }, [isAdmin, auth?.token]);
 
@@ -384,6 +415,23 @@ function Admin({ auth, setAuth, nav }) {
     setMessage('Category created.');
   };
 
+  const saveSettings = async () => {
+    setMessage('');
+    const response = await api('/api/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settingsForm)
+    }, auth.token);
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.message || 'Settings could not be saved.');
+      return;
+    }
+    setSettingsForm((current) => ({ ...current, ...(data.settings || {}) }));
+    setSecretStatus(data.secrets || {});
+    refreshSiteStatus?.();
+    setMessage('Settings saved.');
+  };
+
   if (!isAdmin) {
     return <section className="page-wrap narrow"><h1>Admin Login</h1><p className="muted">Use the admin account to manage products, orders, reviews and settings.</p><div className="content-card"><p><strong>Email:</strong> admin@9sixty.test</p><p><strong>Password:</strong> Password123!</p><button className="gold" onClick={() => nav('/account')}>Go To Login</button></div></section>;
   }
@@ -429,7 +477,20 @@ function Admin({ auth, setAuth, nav }) {
           </div>
           <div className="category-list">{categories.map((category) => <article key={category.id}><Tag size={18} /><div><h3>{category.name}</h3><p>{category.slug}</p>{category.description && <p>{category.description}</p>}</div></article>)}</div>
         </div>}
-        {!['Products', 'Categories'].includes(activeSection) && <div className="content-card"><h2>{activeSection}</h2><p>This admin section is scaffolded. Products and Categories are active management areas.</p></div>}
+        {activeSection === 'Settings/API keys' && <div className="settings-admin">
+          <div className="admin-panel-head"><h2>Settings/API keys</h2><button className="gold" onClick={saveSettings}>Save Settings</button></div>
+          <div className="editor">
+            <label className="toggle-row"><span><strong>Maintenance page</strong><small>Hide every storefront page unless the visitor is logged in as an admin.</small></span><input type="checkbox" checked={Boolean(settingsForm.maintenance_mode)} onChange={(e) => setSettingsForm({ ...settingsForm, maintenance_mode: e.target.checked })} /></label>
+            <label>Fixed shipping price<input type="number" step="0.01" value={settingsForm.shipping_fee || ''} onChange={(e) => setSettingsForm({ ...settingsForm, shipping_fee: e.target.value })} /></label>
+            <label>Free shipping threshold<input type="number" step="0.01" value={settingsForm.free_shipping_threshold || ''} onChange={(e) => setSettingsForm({ ...settingsForm, free_shipping_threshold: e.target.value })} /></label>
+            <label>Stripe publishable key<input value={settingsForm.stripe_publishable_key || ''} onChange={(e) => setSettingsForm({ ...settingsForm, stripe_publishable_key: e.target.value })} /></label>
+            <div className="secret-grid">
+              {Object.entries(secretStatus).map(([key, configured]) => <article key={key}><strong>{key.replaceAll('_', ' ')}</strong><span>{configured ? 'Configured' : 'Not set'}</span></article>)}
+            </div>
+            {message && <p className="admin-message">{message}</p>}
+          </div>
+        </div>}
+        {!['Products', 'Categories', 'Settings/API keys'].includes(activeSection) && <div className="content-card"><h2>{activeSection}</h2><p>This admin section is scaffolded. Products, Categories and Settings/API keys are active management areas.</p></div>}
       </section>
     </div>
   </section>;

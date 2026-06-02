@@ -764,6 +764,115 @@ th {
   margin: 4px 0 0;
 }
 
+.maintenance-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .8), rgba(0, 0, 0, .42)),
+    url('/app/assets/products/frame-barlow-kit-1.jpg') center / cover no-repeat,
+    #111;
+}
+
+.maintenance-panel {
+  width: min(760px, 100%);
+  text-align: center;
+  padding: clamp(34px, 7vw, 80px);
+  background: rgba(15, 15, 15, .88);
+  border: 1px solid rgba(166, 147, 111, .34);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+}
+
+.maintenance-logo {
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: #fff;
+  color: #050505;
+  font: 700 28px/1 var(--body-font);
+  letter-spacing: 4px;
+  padding: 14px 18px;
+}
+
+.maintenance-panel .eyebrow {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 12px;
+  margin: 0 0 14px;
+}
+
+.maintenance-panel h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(48px, 9vw, 104px);
+  line-height: .9;
+  text-transform: uppercase;
+}
+
+.maintenance-panel p:not(.eyebrow) {
+  max-width: 560px;
+  margin: 24px auto 32px;
+  color: #c6c6c6;
+}
+
+.maintenance-panel button.gold {
+  border: 0;
+  border-radius: 7px;
+  padding: 15px 28px;
+  text-transform: uppercase;
+  font-family: NineSixtyDisplay, Impact, sans-serif;
+  letter-spacing: 1.5px;
+}
+
+.settings-admin .toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: #1b1b1b;
+}
+
+.settings-admin .toggle-row span {
+  display: grid;
+  gap: 5px;
+}
+
+.settings-admin .toggle-row small {
+  color: var(--muted);
+}
+
+.settings-admin .toggle-row input {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--gold);
+}
+
+.secret-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.secret-grid article {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: #181818;
+}
+
+.secret-grid strong {
+  display: block;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.secret-grid span {
+  color: var(--gold);
+  font-size: 13px;
+}
+
 @media (max-width: 980px) {
   .site-header { grid-template-columns: auto 1fr auto; padding: 0 18px; }
   .mobile-icon { display: block; }
@@ -772,6 +881,7 @@ th {
   .site-header nav.open { display: flex; }
   .product-grid, .shop-grid, .reviews, .benefits, .admin-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-page, .product-detail, .checkout, .showcase, .footer-grid, .admin-layout { grid-template-columns: 1fr; }
+  .secret-grid { grid-template-columns: 1fr; }
   .admin-nav { position: static; }
   .filters { position: static; }
   .promise { grid-template-columns: 1fr; }

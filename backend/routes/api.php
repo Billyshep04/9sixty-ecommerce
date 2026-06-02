@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+Route::get('/site-status', [StorefrontController::class, 'siteStatus']);
 Route::get('/home', [StorefrontController::class, 'home']);
 Route::get('/products', [StorefrontController::class, 'products']);
 Route::get('/products/{product:slug}', [StorefrontController::class, 'product']);
