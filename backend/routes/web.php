@@ -3,10 +3,15 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/{any?}', function () {
-    $index = public_path('app/index.html');
+    $indexPaths = [
+        public_path('app/index.html'),
+        base_path('../9sixty.com/app/index.html'),
+    ];
 
-    if (file_exists($index)) {
-        return response()->file($index);
+    foreach ($indexPaths as $index) {
+        if (file_exists($index)) {
+            return response()->file($index);
+        }
     }
 
     return response('Build the frontend with npm run build inside /frontend.', 200);
