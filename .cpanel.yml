@@ -13,4 +13,5 @@ deployment:
     - /bin/sed -i.bak "s#__DIR__.'/../bootstrap/app.php'#__DIR__.'/../9sixty_backend/bootstrap/app.php'#" $PUBLICPATH/index.php
     - /bin/rm -f $PUBLICPATH/index.php.bak
     - php $APPPATH/composer install --no-dev --optimize-autoloader --no-interaction || true
+    - php $APPPATH/artisan migrate --seed --force
     - php $APPPATH/artisan optimize:clear || true
