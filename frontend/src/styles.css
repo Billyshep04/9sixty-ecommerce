@@ -874,7 +874,14 @@ th {
 
 .media-card div {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.media-card button.danger {
+  background: #3a1717;
+  border-color: #6f2a2a;
+  color: #fff;
 }
 
 .media-modal {

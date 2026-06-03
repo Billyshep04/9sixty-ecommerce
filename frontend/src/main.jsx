@@ -474,6 +474,24 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
     URL.revokeObjectURL(url);
   };
 
+  const deleteMedia = async (item) => {
+    if (item.readonly) return;
+    if (!confirm(`Delete ${item.name}? This cannot be undone.`)) return;
+    const response = await fetch(`/api/admin/media/${item.filename}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${auth.token}` }
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.message || 'Image delete failed.');
+      return;
+    }
+    setMedia((current) => current.filter((mediaItem) => mediaItem.path !== item.path));
+    if (editing?.hero_image === item.path) setEditing({ ...editing, hero_image: '' });
+    if (editing?.gallery?.includes?.(item.path)) setEditing({ ...editing, gallery: linesToList(editing.gallery).filter((image) => image !== item.path) });
+    setMessage('Image deleted.');
+  };
+
   const saveProduct = async () => {
     const payload = {
       category_id: editing.category_id ? Number(editing.category_id) : null,
@@ -665,7 +683,7 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
         {activeSection === 'Media library' && <div className="media-admin">
           <div className="admin-panel-head"><h2>Media library</h2><label className="upload-button gold">Upload Images<input type="file" accept="image/*" multiple onChange={uploadMedia} /></label></div>
           <div className="media-grid">
-            {media.map((item) => <article key={item.path} className="media-card"><img src={asset(item.path)} alt={item.name} /><strong>{item.name}</strong><span>{Math.round((item.size || 0) / 1024)} KB</span><div><a href={item.path} target="_blank" rel="noreferrer">View</a><button type="button" onClick={() => downloadMedia(item)}>Download</button></div></article>)}
+            {media.map((item) => <article key={item.path} className="media-card"><img src={asset(item.path)} alt={item.name} /><strong>{item.name}</strong><span>{Math.round((item.size || 0) / 1024)} KB{item.readonly ? ' · Build asset' : ''}</span><div><a href={item.path} target="_blank" rel="noreferrer">View</a><button type="button" onClick={() => downloadMedia(item)}>Download</button>{!item.readonly && <button type="button" className="danger" onClick={() => deleteMedia(item)}>Delete</button>}</div></article>)}
             {!media.length && <p className="muted">No uploaded images yet.</p>}
           </div>
           {message && <p className="admin-message">{message}</p>}

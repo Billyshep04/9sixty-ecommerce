@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::match(['get', 'post'], '/discount-codes', [AdminController::class, 'discountCodes']);
         Route::match(['get', 'post'], '/gift-cards', [AdminController::class, 'giftCards']);
         Route::get('/media/{filename}/download', [AdminController::class, 'downloadMedia'])->where('filename', '[A-Za-z0-9._-]+');
+        Route::delete('/media/{filename}', [AdminController::class, 'deleteMedia'])->where('filename', '[A-Za-z0-9._-]+');
         Route::match(['get', 'post'], '/media', [AdminController::class, 'media']);
     });
 });

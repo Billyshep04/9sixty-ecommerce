@@ -234,6 +234,16 @@ class AdminController extends Controller
         return Storage::disk('public')->download($path);
     }
 
+    public function deleteMedia(string $filename): JsonResponse
+    {
+        $path = 'media/' . basename($filename);
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        Storage::disk('public')->delete($path);
+
+        return response()->json(['message' => 'Media deleted.']);
+    }
+
     private function mediaItem(string $path): array
     {
         $filename = basename($path);
