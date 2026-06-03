@@ -20,6 +20,10 @@ const asset = (path) => {
   return `${import.meta.env.BASE_URL}${clean}`;
 };
 const money = (value) => `£${Number(value || 0).toFixed(2)}`;
+const linesToList = (value) => Array.isArray(value) ? value : String(value || '').split('\n').map((line) => line.trim()).filter(Boolean);
+const listToLines = (value) => Array.isArray(value) ? value.join('\n') : String(value || '');
+const specsToText = (value = {}) => Object.entries(value || {}).map(([key, item]) => `${key}: ${item}`).join('\n');
+const textToSpecs = (value) => Object.fromEntries(String(value || '').split('\n').map((line) => line.split(':')).filter(([key, item]) => key?.trim() && item?.trim()).map(([key, ...rest]) => [key.trim(), rest.join(':').trim()]));
 const productImages = [
   '/assets/products/frame-desert-tan-1.jpg',
   '/assets/products/frame-barlow-1.jpg',
@@ -363,6 +367,31 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
   const [secretStatus, setSecretStatus] = useState({});
   const [message, setMessage] = useState('');
   const isAdmin = auth?.user?.role === 'admin';
+  const newProduct = () => ({
+    category_id: categories[0]?.id || '',
+    name: 'New 9SIXTY Product',
+    slug: '',
+    sku: '',
+    short_description: '',
+    description: '',
+    price: '0.00',
+    sale_price: '',
+    hero_image: productImages[0],
+    gallery: productImages,
+    features: [],
+    specifications: {},
+    meta_title: '',
+    meta_description: '',
+    manage_stock: false,
+    stock_quantity: '',
+    stock_status: 'in_stock',
+    low_stock_threshold: '',
+    weight: '',
+    dimensions: '',
+    is_featured: false,
+    is_active: true,
+    variants: [{ colour_name: 'Black/Gold', name: 'Black/Gold', colour_hex: '#050505', accent_hex: '#A6936F', price_delta: 0, is_active: true }]
+  });
 
   const loadCategories = () => {
     api('/api/admin/categories', {}, auth.token)
@@ -386,26 +415,34 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
       category_id: editing.category_id ? Number(editing.category_id) : null,
       name: editing.name,
       slug: editing.slug,
+      sku: editing.sku || '',
       short_description: editing.short_description || '',
       description: editing.description || '',
       price: Number(editing.price || 0),
+      sale_price: editing.sale_price === '' || editing.sale_price === null || editing.sale_price === undefined ? null : Number(editing.sale_price),
       hero_image: editing.hero_image || productImages[0],
-      gallery: editing.gallery || productImages,
+      gallery: linesToList(editing.gallery),
       specifications: editing.specifications || {},
-      features: editing.features || [],
+      features: linesToList(editing.features),
       meta_title: editing.meta_title || `${editing.name} | 9SIXTY`,
       meta_description: editing.meta_description || editing.short_description || '',
+      manage_stock: Boolean(editing.manage_stock),
+      stock_quantity: editing.stock_quantity === '' || editing.stock_quantity === null || editing.stock_quantity === undefined ? null : Number(editing.stock_quantity),
+      stock_status: editing.stock_status || 'in_stock',
+      low_stock_threshold: editing.low_stock_threshold === '' || editing.low_stock_threshold === null || editing.low_stock_threshold === undefined ? null : Number(editing.low_stock_threshold),
+      weight: editing.weight === '' || editing.weight === null || editing.weight === undefined ? null : Number(editing.weight),
+      dimensions: editing.dimensions || '',
       is_featured: Boolean(editing.is_featured),
       is_active: Boolean(editing.is_active),
       variants: editing.variants?.length ? editing.variants : [{ colour_name: 'Black/Gold', name: 'Black/Gold', colour_hex: '#050505', accent_hex: '#A6936F' }]
     };
-    const response = await api(`/api/admin/products/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) }, auth.token);
+    const response = await api(editing.id ? `/api/admin/products/${editing.id}` : '/api/admin/products', { method: editing.id ? 'PUT' : 'POST', body: JSON.stringify(payload) }, auth.token);
     const data = await response.json();
     if (!response.ok) {
       setMessage(data.message || 'Product could not be saved.');
       return;
     }
-    setProducts(products.map((product) => product.id === data.product.id ? data.product : product));
+    setProducts(editing.id ? products.map((product) => product.id === data.product.id ? data.product : product) : [data.product, ...products]);
     setEditing(data.product);
     setMessage('Product saved.');
   };
@@ -461,21 +498,65 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
       </aside>
       <section className="admin-panel">
         {activeSection === 'Products' && <>
-          <div className="admin-panel-head"><h2>Products</h2><button className="gold" onClick={() => setEditing(products[0])}>Edit First Product</button></div>
+          <div className="admin-panel-head"><h2>Products</h2><button className="gold" onClick={() => { setEditing(newProduct()); setMessage(''); }}>Add Product</button></div>
           <div className="admin-products">{products.map((product) => <button className={editing?.id === product.id ? 'active' : ''} key={product.id} onClick={() => { setEditing(product); setMessage(''); }}><img src={asset(product.hero_image)} alt="" /><span><strong>{product.name}</strong><small>{product.category?.name || 'No category'}</small></span><strong>{money(product.price)}</strong></button>)}</div>
           {editing && <div className="editor">
-            <h3>Edit Product</h3>
-            <label>Category<select value={editing.category_id || ''} onChange={(e) => setEditing({ ...editing, category_id: e.target.value ? Number(e.target.value) : null })}><option value="">No category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
-            <label>Name<input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></label>
-            <label>Slug<input value={editing.slug || ''} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></label>
-            <label>Price<input type="number" step="0.01" value={editing.price || ''} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></label>
-            <label>Short Description<textarea value={editing.short_description || ''} onChange={(e) => setEditing({ ...editing, short_description: e.target.value })} /></label>
-            <label>Description<textarea value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></label>
-            <label>Meta Title<input value={editing.meta_title || ''} onChange={(e) => setEditing({ ...editing, meta_title: e.target.value })} /></label>
-            <label>Meta Description<textarea value={editing.meta_description || ''} onChange={(e) => setEditing({ ...editing, meta_description: e.target.value })} /></label>
-            <div className="editor-toggles"><label><input type="checkbox" checked={Boolean(editing.is_featured)} onChange={(e) => setEditing({ ...editing, is_featured: e.target.checked })} /> Featured</label><label><input type="checkbox" checked={Boolean(editing.is_active)} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /> Active</label></div>
-            <h4>Colour Variants</h4>
-            {editing.variants?.map((variant, index) => <div className="variant-editor" key={variant.id || index}><input value={variant.colour_name || ''} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, colour_name: e.target.value, name: e.target.value }; setEditing({ ...editing, variants }); }} /><input type="color" value={variant.accent_hex || '#A6936F'} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, accent_hex: e.target.value }; setEditing({ ...editing, variants }); }} /></div>)}
+            <div className="editor-title"><h3>{editing.id ? 'Edit Product' : 'New Product'}</h3><button className="gold" onClick={saveProduct}>Save Product</button></div>
+            <div className="product-editor-grid">
+              <section className="editor-card wide">
+                <h4>Product Content</h4>
+                <label>Product name<input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></label>
+                <label>Slug<input value={editing.slug || ''} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} placeholder="auto-generated if left blank" /></label>
+                <label>Card excerpt<textarea value={editing.short_description || ''} onChange={(e) => setEditing({ ...editing, short_description: e.target.value })} placeholder="Short copy shown on product cards and summaries." /></label>
+                <label>Full description<textarea value={editing.description || ''} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></label>
+              </section>
+              <section className="editor-card">
+                <h4>Publish</h4>
+                <label>Category<select value={editing.category_id || ''} onChange={(e) => setEditing({ ...editing, category_id: e.target.value ? Number(e.target.value) : null })}><option value="">No category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+                <div className="editor-toggles"><label><input type="checkbox" checked={Boolean(editing.is_active)} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} /> Published</label><label><input type="checkbox" checked={Boolean(editing.is_featured)} onChange={(e) => setEditing({ ...editing, is_featured: e.target.checked })} /> Featured product</label></div>
+              </section>
+              <section className="editor-card">
+                <h4>Pricing</h4>
+                <label>Regular price<input type="number" step="0.01" value={editing.price || ''} onChange={(e) => setEditing({ ...editing, price: e.target.value })} /></label>
+                <label>Sale price<input type="number" step="0.01" value={editing.sale_price || ''} onChange={(e) => setEditing({ ...editing, sale_price: e.target.value })} /></label>
+              </section>
+              <section className="editor-card">
+                <h4>Inventory</h4>
+                <label>SKU<input value={editing.sku || ''} onChange={(e) => setEditing({ ...editing, sku: e.target.value })} /></label>
+                <label>Stock status<select value={editing.stock_status || 'in_stock'} onChange={(e) => setEditing({ ...editing, stock_status: e.target.value })}><option value="in_stock">In stock</option><option value="out_of_stock">Out of stock</option><option value="on_backorder">On backorder</option></select></label>
+                <div className="editor-toggles"><label><input type="checkbox" checked={Boolean(editing.manage_stock)} onChange={(e) => setEditing({ ...editing, manage_stock: e.target.checked })} /> Manage stock quantity</label></div>
+                <label>Stock quantity<input type="number" min="0" value={editing.stock_quantity ?? ''} onChange={(e) => setEditing({ ...editing, stock_quantity: e.target.value })} /></label>
+                <label>Low stock threshold<input type="number" min="0" value={editing.low_stock_threshold ?? ''} onChange={(e) => setEditing({ ...editing, low_stock_threshold: e.target.value })} /></label>
+              </section>
+              <section className="editor-card">
+                <h4>Shipping Data</h4>
+                <label>Weight<input type="number" step="0.01" value={editing.weight ?? ''} onChange={(e) => setEditing({ ...editing, weight: e.target.value })} placeholder="0.50" /></label>
+                <label>Dimensions<input value={editing.dimensions || ''} onChange={(e) => setEditing({ ...editing, dimensions: e.target.value })} placeholder="8 x 6 x 4 inches" /></label>
+              </section>
+              <section className="editor-card wide">
+                <h4>Images</h4>
+                <label>Featured image URL<input value={editing.hero_image || ''} onChange={(e) => setEditing({ ...editing, hero_image: e.target.value })} placeholder="/assets/products/image.jpg" /></label>
+                {editing.hero_image && <img className="editor-preview" src={asset(editing.hero_image)} alt="" />}
+                <label>Gallery images<textarea value={listToLines(editing.gallery)} onChange={(e) => setEditing({ ...editing, gallery: linesToList(e.target.value) })} placeholder={'/assets/products/image-1.jpg\n/assets/products/image-2.jpg'} /></label>
+              </section>
+              <section className="editor-card">
+                <h4>Features</h4>
+                <label>Feature bullets<textarea value={listToLines(editing.features)} onChange={(e) => setEditing({ ...editing, features: linesToList(e.target.value) })} placeholder={'Carbon fibre infused construction\nPrecision-cut mounting holes'} /></label>
+              </section>
+              <section className="editor-card">
+                <h4>Specifications</h4>
+                <label>Specification rows<textarea value={specsToText(editing.specifications)} onChange={(e) => setEditing({ ...editing, specifications: textToSpecs(e.target.value) })} placeholder={'Material: Carbon Fibre Infused Plastic\nWeight: 0.5kg'} /></label>
+              </section>
+              <section className="editor-card wide">
+                <h4>SEO</h4>
+                <label>SEO title<input value={editing.meta_title || ''} onChange={(e) => setEditing({ ...editing, meta_title: e.target.value })} placeholder={`${editing.name || 'Product'} | 9SIXTY`} /></label>
+                <label>Meta description<textarea value={editing.meta_description || ''} onChange={(e) => setEditing({ ...editing, meta_description: e.target.value })} placeholder="Search result description for this product." /></label>
+              </section>
+              <section className="editor-card wide">
+                <div className="editor-title"><h4>Colour Variants</h4><button onClick={() => setEditing({ ...editing, variants: [...(editing.variants || []), { colour_name: 'New Colour', name: 'New Colour', colour_hex: '#050505', accent_hex: '#A6936F', price_delta: 0, is_active: true }] })}>Add Variant</button></div>
+                {editing.variants?.map((variant, index) => <div className="variant-editor expanded" key={variant.id || index}><input value={variant.colour_name || ''} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, colour_name: e.target.value, name: e.target.value }; setEditing({ ...editing, variants }); }} placeholder="Variant name" /><input type="color" value={variant.colour_hex || '#050505'} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, colour_hex: e.target.value }; setEditing({ ...editing, variants }); }} /><input type="color" value={variant.accent_hex || '#A6936F'} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, accent_hex: e.target.value }; setEditing({ ...editing, variants }); }} /><input type="number" step="0.01" value={variant.price_delta || 0} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, price_delta: Number(e.target.value || 0) }; setEditing({ ...editing, variants }); }} placeholder="Price delta" /><label><input type="checkbox" checked={variant.is_active !== false} onChange={(e) => { const variants = [...editing.variants]; variants[index] = { ...variant, is_active: e.target.checked }; setEditing({ ...editing, variants }); }} /> Active</label></div>)}
+              </section>
+            </div>
             <button className="gold" onClick={saveProduct}>Save Product</button>{message && <p className="admin-message">{message}</p>}
           </div>}
         </>}

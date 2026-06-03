@@ -701,6 +701,47 @@ th {
   padding-top: 24px; 
 }
 
+.editor-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.product-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.editor-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+}
+
+.editor-card.wide {
+  grid-column: 1 / -1;
+}
+
+.editor-card h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+}
+
+.editor-preview {
+  width: min(260px, 100%);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+
 .editor label { 
   display: grid; 
   gap: 8px; 
@@ -722,6 +763,18 @@ th {
   width: 72px; 
   min-height: 48px; 
   padding: 4px; 
+}
+
+.variant-editor.expanded {
+  display: grid;
+  grid-template-columns: 1.5fr auto auto 120px auto;
+  align-items: center;
+}
+
+.variant-editor.expanded label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .category-admin {
@@ -888,6 +941,8 @@ th {
   .site-header nav.open { display: flex; }
   .product-grid, .shop-grid, .reviews, .benefits, .admin-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-page, .product-detail, .checkout, .showcase, .footer-grid, .admin-layout { grid-template-columns: 1fr; }
+  .product-editor-grid { grid-template-columns: 1fr; }
+  .variant-editor.expanded { grid-template-columns: 1fr; }
   .secret-grid { grid-template-columns: 1fr; }
   .admin-nav { position: static; }
   .filters { position: static; }

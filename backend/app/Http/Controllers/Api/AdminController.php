@@ -45,13 +45,21 @@ class AdminController extends Controller
             'slug' => ['nullable', 'string', 'max:190', Rule::unique('products', 'slug')->ignore($product)],
             'short_description' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'sku' => ['nullable', 'string', 'max:120', Rule::unique('products', 'sku')->ignore($product)],
             'price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
             'hero_image' => ['nullable', 'string'],
             'gallery' => ['nullable', 'array'],
             'specifications' => ['nullable', 'array'],
             'features' => ['nullable', 'array'],
             'meta_title' => ['nullable', 'string', 'max:190'],
             'meta_description' => ['nullable', 'string'],
+            'manage_stock' => ['boolean'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'stock_status' => ['nullable', Rule::in(['in_stock', 'out_of_stock', 'on_backorder'])],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
+            'dimensions' => ['nullable', 'string', 'max:120'],
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
             'variants' => ['nullable', 'array'],
@@ -60,6 +68,8 @@ class AdminController extends Controller
         $variants = $data['variants'] ?? [];
         unset($data['variants']);
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
+        $data['sku'] = filled($data['sku'] ?? null) ? $data['sku'] : null;
+        $data['stock_status'] = $data['stock_status'] ?? 'in_stock';
         $product = Product::query()->updateOrCreate(['id' => $product?->id], $data);
 
         foreach ($variants as $variant) {
