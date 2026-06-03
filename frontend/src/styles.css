@@ -856,7 +856,9 @@ th {
   gap: 12px;
 }
 
-.secret-grid article {
+.secret-grid .secret-field {
+  display: grid;
+  gap: 10px;
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, .1);
   background: #181818;
@@ -868,9 +870,14 @@ th {
   text-transform: capitalize;
 }
 
-.secret-grid span {
+.secret-grid small {
   color: var(--gold);
   font-size: 13px;
+}
+
+.secret-grid input {
+  width: 100%;
+  min-height: 46px;
 }
 
 @media (max-width: 980px) {

@@ -159,7 +159,12 @@ class AdminController extends Controller
                     $value = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? '1' : '0';
                 }
 
-                SiteSetting::putValue($key, $value, str_contains($key, 'key') || str_contains($key, 'secret') || str_contains($key, 'password'));
+                $encrypted = str_contains($key, 'key') || str_contains($key, 'secret') || str_contains($key, 'password');
+                if ($encrypted && blank($value)) {
+                    continue;
+                }
+
+                SiteSetting::putValue($key, $value, $encrypted);
             }
         }
 

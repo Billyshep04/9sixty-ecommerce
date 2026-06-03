@@ -54,6 +54,16 @@ const showcaseHotspots = [
   }
 ];
 
+const secretFields = [
+  ['stripe_secret_key', 'Stripe Secret Key'],
+  ['smtp2go_api_key', 'SMTP2GO API Key'],
+  ['smtp2go_password', 'SMTP2GO Password'],
+  ['mailchimp_api_key', 'Mailchimp API Key'],
+  ['mailchimp_list_id', 'Mailchimp List ID'],
+  ['tree_nation_api_key', 'Tree-Nation API Key'],
+  ['shiptheory_api_key', 'Shiptheory API Key']
+];
+
 const demoProducts = [
   product('FRAME III - Desert Tan', 'frame-iii-desert-tan', 69.99, 'Desert Tan', '#A6936F', productImages[0]),
   product('FRAME III - Barlow', 'frame-iii-barlow', 69.99, 'Barlow', '#B9A678', productImages[1]),
@@ -349,6 +359,7 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
   const [activeSection, setActiveSection] = useState('Products');
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
   const [settingsForm, setSettingsForm] = useState({ maintenance_mode: true, shipping_fee: '5.99', free_shipping_threshold: '70', stripe_publishable_key: '' });
+  const [secretForm, setSecretForm] = useState(() => Object.fromEntries(secretFields.map(([key]) => [key, ''])));
   const [secretStatus, setSecretStatus] = useState({});
   const [message, setMessage] = useState('');
   const isAdmin = auth?.user?.role === 'admin';
@@ -417,9 +428,10 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
 
   const saveSettings = async () => {
     setMessage('');
+    const filledSecrets = Object.fromEntries(Object.entries(secretForm).filter(([, value]) => String(value || '').trim() !== ''));
     const response = await api('/api/admin/settings', {
       method: 'PUT',
-      body: JSON.stringify(settingsForm)
+      body: JSON.stringify({ ...settingsForm, ...filledSecrets })
     }, auth.token);
     const data = await response.json();
     if (!response.ok) {
@@ -427,6 +439,7 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
       return;
     }
     setSettingsForm((current) => ({ ...current, ...(data.settings || {}) }));
+    setSecretForm(Object.fromEntries(secretFields.map(([key]) => [key, ''])));
     setSecretStatus(data.secrets || {});
     refreshSiteStatus?.();
     setMessage('Settings saved.');
@@ -485,7 +498,7 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
             <label>Free shipping threshold<input type="number" step="0.01" value={settingsForm.free_shipping_threshold || ''} onChange={(e) => setSettingsForm({ ...settingsForm, free_shipping_threshold: e.target.value })} /></label>
             <label>Stripe publishable key<input value={settingsForm.stripe_publishable_key || ''} onChange={(e) => setSettingsForm({ ...settingsForm, stripe_publishable_key: e.target.value })} /></label>
             <div className="secret-grid">
-              {Object.entries(secretStatus).map(([key, configured]) => <article key={key}><strong>{key.replaceAll('_', ' ')}</strong><span>{configured ? 'Configured' : 'Not set'}</span></article>)}
+              {secretFields.map(([key, label]) => <label className="secret-field" key={key}><span><strong>{label}</strong><small>{secretStatus[key] ? 'Configured. Leave blank to keep current value.' : 'Not set.'}</small></span><input type={key.includes('password') || key.includes('secret') || key.includes('key') ? 'password' : 'text'} value={secretForm[key] || ''} placeholder={secretStatus[key] ? 'Enter new value to replace' : 'Enter value'} onChange={(e) => setSecretForm({ ...secretForm, [key]: e.target.value })} /></label>)}
             </div>
             {message && <p className="admin-message">{message}</p>}
           </div>
