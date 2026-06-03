@@ -22,6 +22,8 @@ const asset = (path) => {
   return `${import.meta.env.BASE_URL}${clean}`;
 };
 const money = (value) => `£${Number(value || 0).toFixed(2)}`;
+const currentPrice = (product) => Number(product?.sale_price || product?.price || 0);
+const primaryVariant = (product) => product?.variants?.[0] || { id: 'default', name: 'Default', colour_name: 'Default' };
 const linesToList = (value) => Array.isArray(value) ? value : String(value || '').split('\n').map((line) => line.trim()).filter(Boolean);
 const listToLines = (value) => Array.isArray(value) ? value.join('\n') : String(value || '');
 const specsToText = (value = {}) => Object.entries(value || {}).map(([key, item]) => `${key}: ${item}`).join('\n');
@@ -173,16 +175,28 @@ function Header({ nav, cart, auth }) {
 }
 
 function Home({ nav, addToCart }) {
+  const [homeData, setHomeData] = useState({ featured_products: demoProducts.slice(0, 3), reviews: demoProducts[0].reviews });
+
+  useEffect(() => {
+    api('/api/home')
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => setHomeData({
+        featured_products: data.featured_products?.length ? data.featured_products : demoProducts.slice(0, 3),
+        reviews: data.reviews?.length ? data.reviews : demoProducts[0].reviews
+      }))
+      .catch(() => {});
+  }, []);
+
   return <>
     <section className="hero">
       <img src={asset(productImages[2])} alt="9SIXTY premium wall-mounted helmet stand" />
       <div className="hero-copy"><h1>Engineered<br /><span>For Excellence</span></h1><p>Premium modular wall-mounted stands designed to protect and preserve your valuable gear.</p><div><button onClick={() => nav('/shop')} className="gold">Shop Now</button><button onClick={() => nav('/showcase')}>Learn More</button></div></div>
     </section>
     <Section title="Featured Products">
-      <div className="product-grid featured">{demoProducts.slice(0, 3).map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}</div>
+      <div className="product-grid featured">{homeData.featured_products.slice(0, 3).map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}</div>
     </Section>
     <section className="band"><h2>Why Choose 9SIXTY</h2><p>Precision engineering meets premium material.</p><div className="benefits">{[[ShieldCheck, 'Premium Materials'], [Truck, 'Easy Installation'], [Package, 'Modular Design'], [Star, 'Built to Last']].map(([Icon, title]) => <article key={title}><Icon size={24}/><h3>{title}</h3><p>Crafted for refined garage and display environments.</p></article>)}</div></section>
-    <Section title="What Our Customers Say"><div className="reviews">{demoProducts[0].reviews.concat([{ id: 3, rating: 5, user: { name: 'Mike Johnson' }, body: 'Worth every penny. These stands are engineered to perfection.' }]).map((r) => <ReviewCard key={r.id} review={r} />)}</div></Section>
+    <Section title="What Our Customers Say"><div className="reviews">{homeData.reviews.concat(homeData.reviews.length < 3 ? [{ id: 'fallback-review', rating: 5, user: { name: 'Mike Johnson' }, body: 'Worth every penny. These stands are engineered to perfection.' }] : []).slice(0, 3).map((r) => <ReviewCard key={r.id} review={r} />)}</div></Section>
     <section className="cta"><h2>Ready To Upgrade Your Garage?</h2><p>Join thousands of satisfied customers who trust 9SIXTY for their gear storage.</p><button onClick={() => nav('/shop')}>Browse Collection</button></section>
   </>;
 }
@@ -190,30 +204,63 @@ function Home({ nav, addToCart }) {
 function Shop({ nav, addToCart }) {
   const [category, setCategory] = useState('All');
   const [colour, setColour] = useState('All');
-  const filtered = demoProducts.filter((p) => category === 'All' || p.category.name === category).filter((p) => colour === 'All' || p.variants.some((v) => v.colour_name.includes(colour)));
-  return <section className="shop-page page-wrap"><aside className="filters"><h4>Category</h4>{['All', 'Helmet Stands', 'Kit Hangers', 'Accessories'].map((x) => <button className={category === x ? 'active' : ''} onClick={() => setCategory(x)} key={x}>{x}</button>)}<h4>Color</h4>{['All', 'Black', 'Black/Gold', 'Silver'].map((x) => <button className={colour === x ? 'active' : ''} onClick={() => setColour(x)} key={x}>{x}</button>)}<h4>Price Range</h4>{['All', 'Under £50', '£50 - £100', 'Over £100'].map((x) => <button key={x}>{x}</button>)}</aside><div><h1>Shop Collection</h1><div className="product-grid shop-grid">{filtered.map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}</div></div></section>;
+  const [products, setProducts] = useState(demoProducts);
+  const [categories, setCategories] = useState([{ name: 'Helmet Stands', slug: 'helmet-stands' }, { name: 'Kit Hangers', slug: 'kit-hangers' }, { name: 'Accessories', slug: 'accessories' }]);
+  const categorySlug = category === 'All' ? '' : categories.find((item) => item.name === category)?.slug || '';
+  const colours = ['All', ...Array.from(new Set(products.flatMap((p) => (p.variants || []).map((v) => v.colour_name)).filter(Boolean)))];
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (categorySlug) params.set('category', categorySlug);
+    if (colour !== 'All') params.set('colour', colour);
+    api(`/api/products${params.toString() ? `?${params}` : ''}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => {
+        setProducts(data.products?.data?.length ? data.products.data : []);
+        if (data.categories?.length) setCategories(data.categories);
+      })
+      .catch(() => {});
+  }, [categorySlug, colour]);
+
+  return <section className="shop-page page-wrap"><aside className="filters"><h4>Category</h4>{['All', ...categories.map((item) => item.name)].map((x) => <button className={category === x ? 'active' : ''} onClick={() => setCategory(x)} key={x}>{x}</button>)}<h4>Color</h4>{colours.map((x) => <button className={colour === x ? 'active' : ''} onClick={() => setColour(x)} key={x}>{x}</button>)}<h4>Price Range</h4>{['All', 'Under £50', '£50 - £100', 'Over £100'].map((x) => <button key={x}>{x}</button>)}</aside><div><h1>Shop Collection</h1><div className="product-grid shop-grid">{products.map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}{!products.length && <p className="muted">No products match those filters.</p>}</div></div></section>;
 }
 
 function ProductCard({ product: p, nav, addToCart }) {
-  return <article className="product-card"><button className="image-button" onClick={() => nav(`/product/${p.slug}`)}><img src={asset(p.hero_image)} alt={p.name} /></button><div className="card-body"><span>{p.category.name}</span><h3>{p.name}</h3><div className="price-row"><strong>{money(p.price)}</strong><small>{p.variants[0].colour_name}</small></div><div className="card-actions"><button className="gold" onClick={() => addToCart(p, p.variants[0])}>Add</button><button onClick={() => nav(`/product/${p.slug}`)}>View Details</button></div></div></article>;
+  const variant = primaryVariant(p);
+  const outOfStock = p.stock_status === 'out_of_stock' || (p.manage_stock && Number(p.stock_quantity || 0) <= 0);
+  return <article className="product-card"><button className="image-button" onClick={() => nav(`/product/${p.slug}`)}><img src={asset(p.hero_image)} alt={p.name} /></button><div className="card-body"><span>{p.category?.name || 'Uncategorised'}</span><h3>{p.name}</h3>{p.short_description && <p className="card-excerpt">{p.short_description}</p>}<div className="price-row"><strong>{p.sale_price ? <><s>{money(p.price)}</s> {money(p.sale_price)}</> : money(p.price)}</strong><small>{variant.colour_name}</small></div>{outOfStock && <p className="stock-note">Out of stock</p>}<div className="card-actions"><button className="gold" disabled={outOfStock} onClick={() => addToCart(p, variant)}>Add</button><button onClick={() => nav(`/product/${p.slug}`)}>View Details</button></div></div></article>;
 }
 
 function ProductPage({ slug, addToCart }) {
-  const p = demoProducts.find((item) => item.slug === slug) || demoProducts[0];
-  const [image, setImage] = useState(p.gallery[0]);
-  const [variant, setVariant] = useState(p.variants[0]);
+  const [p, setProduct] = useState(demoProducts.find((item) => item.slug === slug) || demoProducts[0]);
+  const [image, setImage] = useState((p.gallery || [p.hero_image])[0]);
+  const [variant, setVariant] = useState(primaryVariant(p));
   const [qty, setQty] = useState(1);
-  return <section className="product-detail page-wrap"><div className="gallery"><img className="main-img" src={asset(image)} alt={p.name} /><div className="thumbs">{p.gallery.map((img) => <button className={image === img ? 'active' : ''} onClick={() => setImage(img)} key={img}><img src={asset(img)} alt="" /></button>)}</div></div><div className="buy-panel"><h1>{p.name}</h1><Stars /> <span className="muted">4.9 (127 reviews)</span><p className="product-price">{money(p.price)}</p><h4>Select Variant</h4><div className="variant-row">{p.variants.map((v) => <button className={variant.id === v.id ? 'active' : ''} onClick={() => setVariant(v)} key={v.id}>{v.name}</button>)}</div><h4>Quantity</h4><div className="qty"><button onClick={() => setQty(Math.max(1, qty - 1))}>-</button><strong>{qty}</strong><button onClick={() => setQty(qty + 1)}>+</button></div><div className="purchase"><button className="gold" onClick={() => addToCart(p, variant, qty)}>Add To Cart</button><button>Buy Now</button></div><div className="promise"><span><Truck />Free Shipping</span><span><ShieldCheck />2 Year Warranty</span><span><RotateCcw />30 Day Returns</span></div><article className="description"><h3>Product Description</h3><p>{p.description}</p><h4>Key Features</h4>{p.features.map((f) => <p className="check" key={f}>✓ {f}</p>)}</article></div><div className="wide"><h2>Specifications</h2><table><tbody>{Object.entries(p.specifications).map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}</tbody></table><h2>Customer Reviews</h2>{p.reviews.map((r) => <ReviewCard key={r.id} review={r} />)}</div></section>;
+  const gallery = p.gallery?.length ? p.gallery : [p.hero_image].filter(Boolean);
+  const outOfStock = p.stock_status === 'out_of_stock' || (p.manage_stock && Number(p.stock_quantity || 0) <= 0);
+
+  useEffect(() => {
+    api(`/api/products/${slug}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((data) => {
+        setProduct(data.product);
+        setImage((data.product.gallery?.length ? data.product.gallery : [data.product.hero_image])[0]);
+        setVariant(primaryVariant(data.product));
+      })
+      .catch(() => {});
+  }, [slug]);
+
+  return <section className="product-detail page-wrap"><div className="gallery"><img className="main-img" src={asset(image)} alt={p.name} /><div className="thumbs">{gallery.map((img) => <button className={image === img ? 'active' : ''} onClick={() => setImage(img)} key={img}><img src={asset(img)} alt="" /></button>)}</div></div><div className="buy-panel"><h1>{p.name}</h1><Stars /> <span className="muted">4.9 ({p.reviews?.length || 0} reviews)</span><p className="product-price">{p.sale_price ? <><s>{money(p.price)}</s> {money(p.sale_price)}</> : money(p.price)}</p>{p.short_description && <p>{p.short_description}</p>}<h4>Select Variant</h4><div className="variant-row">{(p.variants || []).map((v) => <button className={variant.id === v.id ? 'active' : ''} onClick={() => setVariant(v)} key={v.id}>{v.name}</button>)}</div><h4>Quantity</h4><div className="qty"><button onClick={() => setQty(Math.max(1, qty - 1))}>-</button><strong>{qty}</strong><button onClick={() => setQty(qty + 1)}>+</button></div>{outOfStock && <p className="stock-note">Out of stock</p>}<div className="purchase"><button className="gold" disabled={outOfStock} onClick={() => addToCart(p, variant, qty)}>Add To Cart</button><button disabled={outOfStock}>Buy Now</button></div><div className="promise"><span><Truck />Free Shipping</span><span><ShieldCheck />2 Year Warranty</span><span><RotateCcw />30 Day Returns</span></div><article className="description"><h3>Product Description</h3><p>{p.description}</p><h4>Key Features</h4>{(p.features || []).map((f) => <p className="check" key={f}>✓ {f}</p>)}</article></div><div className="wide"><h2>Specifications</h2><table><tbody>{Object.entries(p.specifications || {}).map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}</tbody></table><h2>Customer Reviews</h2>{(p.reviews || []).map((r) => <ReviewCard key={r.id} review={r} />)}</div></section>;
 }
 
 function Basket({ cart, setCart, nav }) {
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + currentPrice(item.product) * item.quantity, 0);
   const shipping = subtotal >= 70 || subtotal === 0 ? 0 : 5.99;
-  return <section className="page-wrap narrow"><h1>Basket</h1>{cart.length === 0 && <p className="muted">Your basket is empty.</p>}{cart.map((item, index) => <div className="basket-line" key={`${item.product.slug}-${index}`}><img src={asset(item.product.hero_image)} alt="" /><div><h3>{item.product.name}</h3><p>{item.variant.name} x {item.quantity}</p></div><strong>{money(item.product.price * item.quantity)}</strong></div>)}<div className="summary"><p>Subtotal <strong>{money(subtotal)}</strong></p><p>Shipping <strong>{shipping ? money(shipping) : 'Free'}</strong></p><p>Trees planted <strong>{Math.floor(subtotal / 50)}</strong></p><h2>Total {money(subtotal + shipping)}</h2><button className="gold" onClick={() => nav('/checkout')}>Checkout</button><button onClick={() => { setCart([]); localStorage.removeItem('cart'); }}>Clear Basket</button></div></section>;
+  return <section className="page-wrap narrow"><h1>Basket</h1>{cart.length === 0 && <p className="muted">Your basket is empty.</p>}{cart.map((item, index) => <div className="basket-line" key={`${item.product.slug}-${index}`}><img src={asset(item.product.hero_image)} alt="" /><div><h3>{item.product.name}</h3><p>{item.variant.name} x {item.quantity}</p></div><strong>{money(currentPrice(item.product) * item.quantity)}</strong></div>)}<div className="summary"><p>Subtotal <strong>{money(subtotal)}</strong></p><p>Shipping <strong>{shipping ? money(shipping) : 'Free'}</strong></p><p>Trees planted <strong>{Math.floor(subtotal / 50)}</strong></p><h2>Total {money(subtotal + shipping)}</h2><button className="gold" onClick={() => nav('/checkout')}>Checkout</button><button onClick={() => { setCart([]); localStorage.removeItem('cart'); }}>Clear Basket</button></div></section>;
 }
 
 function Checkout({ cart, auth, nav }) {
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + currentPrice(item.product) * item.quantity, 0);
   return <section className="page-wrap checkout"><div><h1>Checkout</h1><form className="form-grid"><input placeholder="Email" defaultValue={auth?.user?.email || ''} /><input placeholder="Full name" /><input placeholder="Phone" /><input placeholder="Address line 1" /><input placeholder="Town/City" /><input placeholder="Postcode" /><button type="button" className="gold" onClick={() => nav('/account')}>Pay With Stripe</button><p className="muted">Stripe Payment Element, Apple Pay and Google Pay hooks are prepared in the API structure.</p></form></div><aside className="summary"><h2>Order Summary</h2><p>Subtotal <strong>{money(subtotal)}</strong></p><p>Shipping <strong>{subtotal >= 70 ? 'Free' : '£5.99'}</strong></p><p><Leaf size={16}/> Trees from this order <strong>{Math.floor(subtotal / 50)}</strong></p></aside></section>;
 }
 

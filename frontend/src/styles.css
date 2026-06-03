@@ -1351,16 +1351,42 @@ p {
   font-size: 23px;
 }
 
+.card-excerpt {
+  min-height: 42px;
+  margin: 10px 0 0;
+  color: #9da0a8;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .price-row strong {
   font-size: 27px;
   font-family: NineSixtyDisplay, Impact, sans-serif;
   letter-spacing: 1px;
 }
 
+.price-row s,
+.product-price s {
+  margin-right: 8px;
+  color: #7e8189;
+}
+
+.stock-note {
+  margin: 8px 0 0;
+  color: #d6c39c;
+  font-weight: 700;
+}
+
 .card-actions button {
   background: #323232;
   color: #fff;
   border: 1px solid transparent;
+}
+
+.card-actions button:disabled,
+.purchase button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
 }
 
 .card-actions button:not(.gold):hover {
