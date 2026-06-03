@@ -15,7 +15,6 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -221,7 +220,6 @@ class AdminController extends Controller
             'media' => collect(Storage::disk('public')->files('media'))
                 ->filter(fn ($path) => preg_match('/\.(jpe?g|png|webp|gif|svg)$/i', $path))
                 ->map(fn ($path) => $this->mediaItem($path))
-                ->merge($this->staticMediaItems())
                 ->values(),
         ]);
     }
@@ -259,34 +257,4 @@ class AdminController extends Controller
         ];
     }
 
-    private function staticMediaItems(): array
-    {
-        $directories = [
-            public_path('app/assets/products'),
-            base_path('../9sixty.com/app/assets/products'),
-        ];
-
-        foreach ($directories as $directory) {
-            if (! File::isDirectory($directory)) {
-                continue;
-            }
-
-            return collect(File::files($directory))
-                ->filter(fn ($file) => preg_match('/\.(jpe?g|png|webp|gif|svg)$/i', $file->getFilename()))
-                ->map(fn ($file) => [
-                    'filename' => $file->getFilename(),
-                    'name' => $file->getFilename(),
-                    'path' => '/app/assets/products/' . $file->getFilename(),
-                    'url' => '/app/assets/products/' . $file->getFilename(),
-                    'download_url' => '/app/assets/products/' . $file->getFilename(),
-                    'size' => $file->getSize(),
-                    'updated_at' => $file->getMTime(),
-                    'readonly' => true,
-                ])
-                ->values()
-                ->all();
-        }
-
-        return [];
-    }
 }
