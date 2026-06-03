@@ -15,6 +15,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -209,9 +210,73 @@ class AdminController extends Controller
     {
         if ($request->isMethod('post')) {
             $data = $request->validate(['file' => ['required', 'image', 'max:5120']]);
-            $path = $data['file']->store('media', 'public');
-            return response()->json(['path' => Storage::url($path)], 201);
+            $file = $data['file'];
+            $filename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('media', $filename, 'public');
+
+            return response()->json(['media' => $this->mediaItem($path)], 201);
         }
-        return response()->json(['media' => collect(Storage::disk('public')->files('media'))->map(fn ($path) => Storage::url($path))->values()]);
+
+        return response()->json([
+            'media' => collect(Storage::disk('public')->files('media'))
+                ->filter(fn ($path) => preg_match('/\.(jpe?g|png|webp|gif|svg)$/i', $path))
+                ->map(fn ($path) => $this->mediaItem($path))
+                ->merge($this->staticMediaItems())
+                ->values(),
+        ]);
+    }
+
+    public function downloadMedia(string $filename)
+    {
+        $path = 'media/' . basename($filename);
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->download($path);
+    }
+
+    private function mediaItem(string $path): array
+    {
+        $filename = basename($path);
+
+        return [
+            'filename' => $filename,
+            'name' => $filename,
+            'path' => '/api/media/' . $filename,
+            'url' => '/api/media/' . $filename,
+            'download_url' => '/api/admin/media/' . $filename . '/download',
+            'size' => Storage::disk('public')->size($path),
+            'updated_at' => Storage::disk('public')->lastModified($path),
+        ];
+    }
+
+    private function staticMediaItems(): array
+    {
+        $directories = [
+            public_path('app/assets/products'),
+            base_path('../9sixty.com/app/assets/products'),
+        ];
+
+        foreach ($directories as $directory) {
+            if (! File::isDirectory($directory)) {
+                continue;
+            }
+
+            return collect(File::files($directory))
+                ->filter(fn ($file) => preg_match('/\.(jpe?g|png|webp|gif|svg)$/i', $file->getFilename()))
+                ->map(fn ($file) => [
+                    'filename' => $file->getFilename(),
+                    'name' => $file->getFilename(),
+                    'path' => '/app/assets/products/' . $file->getFilename(),
+                    'url' => '/app/assets/products/' . $file->getFilename(),
+                    'download_url' => '/app/assets/products/' . $file->getFilename(),
+                    'size' => $file->getSize(),
+                    'updated_at' => $file->getMTime(),
+                    'readonly' => true,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return [];
     }
 }

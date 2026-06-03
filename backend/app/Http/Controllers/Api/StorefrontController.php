@@ -10,6 +10,7 @@ use App\Models\Review;
 use App\Models\SiteSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class StorefrontController extends Controller
 {
@@ -18,6 +19,14 @@ class StorefrontController extends Controller
         return response()->json([
             'maintenance_mode' => SiteSetting::getValue('maintenance_mode', '1') === '1',
         ]);
+    }
+
+    public function media(string $filename)
+    {
+        $path = 'media/' . basename($filename);
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->response($path);
     }
 
     public function home(): JsonResponse

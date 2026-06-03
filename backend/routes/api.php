@@ -11,6 +11,7 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::get('/site-status', [StorefrontController::class, 'siteStatus']);
+Route::get('/media/{filename}', [StorefrontController::class, 'media'])->where('filename', '[A-Za-z0-9._-]+');
 Route::get('/home', [StorefrontController::class, 'home']);
 Route::get('/products', [StorefrontController::class, 'products']);
 Route::get('/products/{product:slug}', [StorefrontController::class, 'product']);
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::match(['get', 'put'], '/settings', [AdminController::class, 'settings']);
         Route::match(['get', 'post'], '/discount-codes', [AdminController::class, 'discountCodes']);
         Route::match(['get', 'post'], '/gift-cards', [AdminController::class, 'giftCards']);
+        Route::get('/media/{filename}/download', [AdminController::class, 'downloadMedia'])->where('filename', '[A-Za-z0-9._-]+');
         Route::match(['get', 'post'], '/media', [AdminController::class, 'media']);
     });
 });

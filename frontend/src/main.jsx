@@ -16,6 +16,8 @@ const api = (path, options = {}, token = null) => fetch(path, {
   }
 });
 const asset = (path) => {
+  if (!path) return `${import.meta.env.BASE_URL}assets/product-stand.svg`;
+  if (/^(https?:|\/api\/|\/storage\/|data:)/.test(path)) return path;
   const clean = path?.startsWith('/assets') ? path.slice(1) : 'assets/product-stand.svg';
   return `${import.meta.env.BASE_URL}${clean}`;
 };
@@ -362,6 +364,8 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
   const [editing, setEditing] = useState(null);
   const [activeSection, setActiveSection] = useState('Products');
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
+  const [media, setMedia] = useState([]);
+  const [mediaPicker, setMediaPicker] = useState(null);
   const [settingsForm, setSettingsForm] = useState({ maintenance_mode: true, shipping_fee: '5.99', free_shipping_threshold: '70', stripe_publishable_key: '' });
   const [secretForm, setSecretForm] = useState(() => Object.fromEntries(secretFields.map(([key]) => [key, ''])));
   const [secretStatus, setSecretStatus] = useState({});
@@ -399,6 +403,12 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
       .then((data) => setCategories(data.categories || []));
   };
 
+  const loadMedia = () => {
+    api('/api/admin/media', {}, auth.token)
+      .then((r) => r.json())
+      .then((data) => setMedia(data.media || []));
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
     api('/api/admin/dashboard', {}, auth.token).then((r) => r.json()).then(setDashboard);
@@ -407,8 +417,62 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
       setSettingsForm((current) => ({ ...current, ...(data.settings || {}) }));
       setSecretStatus(data.secrets || {});
     });
+    loadMedia();
     loadCategories();
   }, [isAdmin, auth?.token]);
+
+  const uploadMedia = async (event, target = null) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    setMessage('');
+    const uploaded = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/admin/media', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.token}` },
+        body: formData
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.message || 'Image upload failed.');
+        continue;
+      }
+      uploaded.push(data.media);
+    }
+    if (uploaded.length) {
+      setMedia((current) => [...uploaded, ...current]);
+      if (target === 'featured') setEditing((current) => ({ ...current, hero_image: uploaded[0].path }));
+      if (target === 'gallery') setEditing((current) => ({ ...current, gallery: [...linesToList(current.gallery), ...uploaded.map((item) => item.path)] }));
+      setMessage(`${uploaded.length} image${uploaded.length === 1 ? '' : 's'} uploaded.`);
+    }
+    event.target.value = '';
+  };
+
+  const chooseMedia = (item) => {
+    if (!mediaPicker) return;
+    if (mediaPicker === 'featured') setEditing({ ...editing, hero_image: item.path });
+    if (mediaPicker === 'gallery') setEditing({ ...editing, gallery: [...linesToList(editing.gallery), item.path] });
+    setMediaPicker(null);
+  };
+
+  const downloadMedia = async (item) => {
+    const response = await fetch(item.download_url, { headers: { Authorization: `Bearer ${auth.token}` } });
+    if (!response.ok) {
+      setMessage('Image download failed.');
+      return;
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = item.name || 'image';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const saveProduct = async () => {
     const payload = {
@@ -535,9 +599,23 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
               </section>
               <section className="editor-card wide">
                 <h4>Images</h4>
-                <label>Featured image URL<input value={editing.hero_image || ''} onChange={(e) => setEditing({ ...editing, hero_image: e.target.value })} placeholder="/assets/products/image.jpg" /></label>
-                {editing.hero_image && <img className="editor-preview" src={asset(editing.hero_image)} alt="" />}
-                <label>Gallery images<textarea value={listToLines(editing.gallery)} onChange={(e) => setEditing({ ...editing, gallery: linesToList(e.target.value) })} placeholder={'/assets/products/image-1.jpg\n/assets/products/image-2.jpg'} /></label>
+                <div className="image-manager">
+                  <div>
+                    <h5>Featured image</h5>
+                    {editing.hero_image ? <div className="selected-image"><img src={asset(editing.hero_image)} alt="" /><button type="button" onClick={() => setEditing({ ...editing, hero_image: '' })}>Remove</button></div> : <div className="empty-media">No featured image selected</div>}
+                    <div className="media-actions"><label className="upload-button">Upload image<input type="file" accept="image/*" onChange={(e) => uploadMedia(e, 'featured')} /></label><button type="button" onClick={() => setMediaPicker('featured')}>Choose from media</button></div>
+                    <label>Featured image URL<input value={editing.hero_image || ''} onChange={(e) => setEditing({ ...editing, hero_image: e.target.value })} placeholder="/api/media/image.jpg" /></label>
+                  </div>
+                  <div>
+                    <h5>Product gallery</h5>
+                    <div className="selected-gallery">
+                      {linesToList(editing.gallery).map((image, index) => <div className="selected-image" key={`${image}-${index}`}><img src={asset(image)} alt="" /><button type="button" onClick={() => setEditing({ ...editing, gallery: linesToList(editing.gallery).filter((_, i) => i !== index) })}>Remove</button></div>)}
+                      {!linesToList(editing.gallery).length && <div className="empty-media">No gallery images selected</div>}
+                    </div>
+                    <div className="media-actions"><label className="upload-button">Upload gallery images<input type="file" accept="image/*" multiple onChange={(e) => uploadMedia(e, 'gallery')} /></label><button type="button" onClick={() => setMediaPicker('gallery')}>Choose from media</button></div>
+                    <label>Gallery image URLs<textarea value={listToLines(editing.gallery)} onChange={(e) => setEditing({ ...editing, gallery: linesToList(e.target.value) })} placeholder={'/api/media/image-1.jpg\n/api/media/image-2.jpg'} /></label>
+                  </div>
+                </div>
               </section>
               <section className="editor-card">
                 <h4>Features</h4>
@@ -584,7 +662,24 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
             {message && <p className="admin-message">{message}</p>}
           </div>
         </div>}
-        {!['Products', 'Categories', 'Settings/API keys'].includes(activeSection) && <div className="content-card"><h2>{activeSection}</h2><p>This admin section is scaffolded. Products, Categories and Settings/API keys are active management areas.</p></div>}
+        {activeSection === 'Media library' && <div className="media-admin">
+          <div className="admin-panel-head"><h2>Media library</h2><label className="upload-button gold">Upload Images<input type="file" accept="image/*" multiple onChange={uploadMedia} /></label></div>
+          <div className="media-grid">
+            {media.map((item) => <article key={item.path} className="media-card"><img src={asset(item.path)} alt={item.name} /><strong>{item.name}</strong><span>{Math.round((item.size || 0) / 1024)} KB</span><div><a href={item.path} target="_blank" rel="noreferrer">View</a><button type="button" onClick={() => downloadMedia(item)}>Download</button></div></article>)}
+            {!media.length && <p className="muted">No uploaded images yet.</p>}
+          </div>
+          {message && <p className="admin-message">{message}</p>}
+        </div>}
+        {mediaPicker && <div className="media-modal">
+          <div className="media-modal-panel">
+            <div className="admin-panel-head"><h2>{mediaPicker === 'featured' ? 'Choose featured image' : 'Choose gallery image'}</h2><button onClick={() => setMediaPicker(null)}>Close</button></div>
+            <div className="media-grid compact">
+              {media.map((item) => <button className="media-select-card" key={item.path} onClick={() => chooseMedia(item)}><img src={asset(item.path)} alt={item.name} /><span>{item.name}</span></button>)}
+              {!media.length && <p className="muted">Upload images in Media library first, or use the upload buttons in the product editor.</p>}
+            </div>
+          </div>
+        </div>}
+        {!['Products', 'Categories', 'Settings/API keys', 'Media library'].includes(activeSection) && <div className="content-card"><h2>{activeSection}</h2><p>This admin section is scaffolded. Products, Categories, Settings/API keys and Media library are active management areas.</p></div>}
       </section>
     </div>
   </section>;
