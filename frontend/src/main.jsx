@@ -529,6 +529,21 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
     setMessage('Product saved.');
   };
 
+  const deleteProduct = async () => {
+    if (!editing?.id) return;
+    if (!confirm(`Delete ${editing.name}? This cannot be undone.`)) return;
+    setMessage('');
+    const response = await api(`/api/admin/products/${editing.id}`, { method: 'DELETE' }, auth.token);
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.message || 'Product could not be deleted.');
+      return;
+    }
+    setProducts(products.filter((product) => product.id !== editing.id));
+    setEditing(null);
+    setMessage(data.message || 'Product deleted.');
+  };
+
   const createCategory = async () => {
     setMessage('');
     const response = await api('/api/admin/categories', {
@@ -583,7 +598,7 @@ function Admin({ auth, setAuth, nav, refreshSiteStatus }) {
           <div className="admin-panel-head"><h2>Products</h2><button className="gold" onClick={() => { setEditing(newProduct()); setMessage(''); }}>Add Product</button></div>
           <div className="admin-products">{products.map((product) => <button className={editing?.id === product.id ? 'active' : ''} key={product.id} onClick={() => { setEditing(product); setMessage(''); }}><img src={asset(product.hero_image)} alt="" /><span><strong>{product.name}</strong><small>{product.category?.name || 'No category'}</small></span><strong>{money(product.price)}</strong></button>)}</div>
           {editing && <div className="editor">
-            <div className="editor-title"><h3>{editing.id ? 'Edit Product' : 'New Product'}</h3><button className="gold" onClick={saveProduct}>Save Product</button></div>
+            <div className="editor-title"><h3>{editing.id ? 'Edit Product' : 'New Product'}</h3><div className="editor-actions">{editing.id && <button className="danger" onClick={deleteProduct}>Delete Product</button>}<button className="gold" onClick={saveProduct}>Save Product</button></div></div>
             <div className="product-editor-grid">
               <section className="editor-card wide">
                 <h4>Product Content</h4>
