@@ -505,6 +505,10 @@ th {
   width: 32%; 
 }
 
+.clear-basket {
+  margin-left: 1rem;
+}
+
 .basket-line { 
   display: grid; 
   grid-template-columns: 120px 1fr auto; 
