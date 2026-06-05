@@ -1230,7 +1230,10 @@ p {
 
 .hero {
   min-height: 660px;
-  background: radial-gradient(circle at 50% 35%, #3a3a3a 0, #242424 42%, #1b1b1b 100%);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .76), rgba(0, 0, 0, .34) 48%, rgba(0, 0, 0, .62)),
+    url('/app/assets/hero/home-helmet-stand.jpg') center / cover no-repeat,
+    #111;
   border-bottom: 1px solid #242424;
 }
 
@@ -1238,7 +1241,7 @@ p {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.46));
+  background: linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.68));
   z-index: 1;
 }
 
@@ -1248,12 +1251,7 @@ p {
 }
 
 .hero img {
-  width: min(900px, 94vw);
-  max-height: 620px;
-  object-fit: contain;
-  opacity: .62;
-  filter: saturate(.82) contrast(1.08);
-  transform: translate(58px, 28px) scale(1.08);
+  display: none;
 }
 
 .hero-copy {

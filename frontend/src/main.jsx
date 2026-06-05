@@ -189,7 +189,6 @@ function Home({ nav, addToCart }) {
 
   return <>
     <section className="hero">
-      <img src={asset(productImages[2])} alt="9SIXTY premium wall-mounted helmet stand" />
       <div className="hero-copy"><h1>Engineered<br /><span>For Excellence</span></h1><p>Premium modular wall-mounted stands designed to protect and preserve your valuable gear.</p><div><button onClick={() => nav('/shop')} className="gold">Shop Now</button><button onClick={() => nav('/showcase')}>Learn More</button></div></div>
     </section>
     <Section title="Featured Products">
