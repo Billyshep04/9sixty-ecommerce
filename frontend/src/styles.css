@@ -395,28 +395,40 @@ footer form button {
 .product-detail { 
   display: grid; 
   grid-template-columns: 1fr 1fr; 
+  align-items: start;
   gap: 48px; 
 }
 
+.gallery {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
 .main-img { 
-  aspect-ratio: 1; 
+  width: 100%;
+  aspect-ratio: 4 / 3; 
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
   background: #ddd; 
   border-radius: 8px; 
 }
 
 .thumbs { 
   display: grid; 
-  grid-template-columns: repeat(3, 1fr); 
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); 
   gap: 16px; 
-  margin-top: 18px; 
+  margin-top: 0; 
 }
 
 .thumbs button { 
   background: #242424; 
   border: 2px solid transparent; 
   border-radius: 8px; 
-  overflow: 
-  hidden; aspect-ratio: 1.2; 
+  overflow: hidden; 
+  aspect-ratio: 1.2; 
+  cursor: pointer;
 }
 
 .thumbs .active { 
@@ -426,7 +438,7 @@ footer form button {
 .thumbs img { 
   width: 100%; 
   height: 100%; 
-  object-fit: cover; 
+  object-fit: contain; 
 }
 
 .buy-panel h4 { 
@@ -480,7 +492,7 @@ footer form button {
 
 .wide { 
   grid-column: 1 / -1;
-  margin-top: 80px; 
+  margin-top: 36px; 
 }
 
 table { 
@@ -1526,16 +1538,27 @@ footer button {
   max-width: 1220px;
   gap: 48px;
   padding-top: 96px;
+  align-items: start;
 }
 
 .main-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 560px;
+  object-fit: contain;
   border-radius: 8px;
   background: #d8d8d8;
 }
 
 .thumbs button {
+  min-height: 0;
+  aspect-ratio: 1.2;
   background: #242424;
   border-width: 2px;
+}
+
+.thumbs img {
+  object-fit: contain;
 }
 
 .buy-panel h1 {
