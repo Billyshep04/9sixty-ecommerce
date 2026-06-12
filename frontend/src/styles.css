@@ -1362,6 +1362,7 @@ p {
 .image-button img {
   object-fit: cover;
   transform: scale(1.03);
+  padding: 0px;
 }
 
 .card-body {
@@ -1702,6 +1703,7 @@ tr:nth-child(odd) td {
     width: min(210px, 100%);
     margin: 6px auto;
     display: block;
+    font-weight: 700;
   }
 
   .hero-copy > div {
