@@ -1160,7 +1160,7 @@ th {
   .basket-line { grid-template-columns: 78px 1fr; }
   .basket-line strong { grid-column: 2; }
   .basket-line img { width: 78px; }
-  .purchase, .card-actions, footer form { flex-direction: column; align-items: stretch; }
+  .purchase, footer form { flex-direction: column; align-items: stretch; }
   .footer-grid { gap: 28px; }
 }
 
@@ -1344,57 +1344,70 @@ p {
 }
 
 .product-card {
-  background: #252525;
-  border-color: #3b3b3b;
-  border-radius: 8px;
-  box-shadow: 0 18px 36px rgba(0,0,0,.16);
+  display: grid;
+  gap: 18px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
 }
 
 .product-card:hover {
-  border-color: rgba(166,147,111,.72);
+  border-color: transparent;
 }
 
 .image-button {
   aspect-ratio: 1.08;
   background: #d6d6d6;
+  border-radius: 18px;
+  overflow: hidden;
 }
 
 .image-button img {
   object-fit: cover;
   transform: scale(1.03);
-  padding: 0px;
+  padding: 0;
 }
 
 .card-body {
-  padding: 20px 22px 18px;
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+  background: #242424;
+  border-radius: 18px;
 }
 
-.card-body span,
-.card-body small {
-  font-size: 12px;
+.card-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
 }
 
 .card-body h3 {
-  margin-top: 10px;
-  font-size: 23px;
+  margin: 0;
+  color: #fff;
+  font-family: Inter, Arial, sans-serif;
+  font-size: clamp(24px, 2.1vw, 32px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
 }
 
-.card-excerpt {
-  min-height: 42px;
-  margin: 10px 0 0;
-  color: #9da0a8;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.price-row strong {
-  font-size: 27px;
+.card-price {
+  color: var(--gold);
+  font-size: clamp(25px, 2vw, 32px);
   font-family: 'Bebas Neue', Impact, sans-serif;
   letter-spacing: 1px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .price-row s,
-.product-price s {
+.product-price s,
+.card-price s {
   margin-right: 8px;
   color: #7e8189;
 }
@@ -1406,9 +1419,12 @@ p {
 }
 
 .card-actions button {
-  background: #323232;
+  min-height: 52px;
+  background: #333;
   color: #fff;
   border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 16px;
 }
 
 .card-actions button:disabled,
