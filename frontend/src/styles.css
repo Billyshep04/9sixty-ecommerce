@@ -303,20 +303,20 @@ footer button {
 }
 
 .footer-logo { 
-  width: 70px; 
-  height: 70px; 
-  background: #fff; 
-  color: #000; 
-  border-radius: 7px; 
-  font-size: 42px; 
-  line-height: .8; 
+  width: 78px; 
+  height: 78px; 
+  margin-bottom: 18px;
+  padding: 0;
+  background: transparent; 
+  border-radius: 0; 
+  overflow: hidden;
 }
 
-.footer-logo span { 
+.footer-logo img { 
   display: block; 
-  font-size: 12px; 
-  writing-mode: vertical-rl; 
-  float: right; 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; 
 }
 
 footer form { 
@@ -1489,7 +1489,7 @@ footer button {
 }
 
 .footer-logo {
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 .page-wrap {
@@ -1732,9 +1732,8 @@ tr:nth-child(odd) td {
   }
 
   .footer-logo {
-    width: 62px;
-    height: 62px;
-    font-size: 36px;
+    width: 70px;
+    height: 70px;
     margin-bottom: 18px;
   }
 
