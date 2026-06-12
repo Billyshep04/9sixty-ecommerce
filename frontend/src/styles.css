@@ -172,6 +172,7 @@ p {
 .gold, .filters .active, .tabs .active, .variant-row .active { 
   background: var(--gold) !important;
   color: #090909 !important; 
+  font-weight: 700;
 }
 
 .section, .band { 
@@ -432,7 +433,7 @@ footer form button {
   aspect-ratio: 4 / 3; 
   height: auto;
   max-height: 560px;
-  object-fit: contain;
+  object-fit: cover;
   background: #ddd; 
   border-radius: 8px; 
 }
@@ -1633,7 +1634,7 @@ footer button {
   width: 100%;
   aspect-ratio: 4 / 3;
   max-height: 560px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 8px;
   background: #d8d8d8;
 }
@@ -1668,6 +1669,17 @@ footer button {
   background: #303030;
   color: #f4f4f4;
   border-radius: 7px;
+}
+
+.variant-row button {
+  background: var(--variant-colour, #303030);
+  border: 1px solid var(--variant-accent, rgba(255,255,255,.12));
+}
+
+.variant-row button.active {
+  background: var(--variant-colour, var(--gold)) !important;
+  border-color: var(--variant-accent, var(--gold));
+  box-shadow: 0 0 0 2px rgba(166,147,111,.35);
 }
 
 .qty strong {
@@ -2366,7 +2378,7 @@ tr:nth-child(odd) td {
     width: 100%;
     max-width: 100%;
     min-height: 0;
-    padding: 48px 18px 76px;
+    padding: 48px 16px 76px;
     overflow-x: hidden;
   }
 
@@ -2481,4 +2493,12 @@ tr:nth-child(odd) td {
     padding-inline: 10px;
     font-size: 15px;
   }
+}
+
+.product-card {
+  min-width: 288px;
+}
+
+.gold {
+  font-weight: 700;
 }
