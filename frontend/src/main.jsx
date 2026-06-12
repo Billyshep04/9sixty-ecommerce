@@ -1,9 +1,7 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { Box3, Vector3 } from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { ShoppingCart, User, Menu, Star, ShieldCheck, Truck, RotateCcw, Leaf, Upload, Settings, Package, Newspaper, Gift, Tag, Image as ImageIcon } from 'lucide-react';
+import ProductScrollShowcase from './ProductScrollShowcase.jsx';
 import './styles.css';
 
 const api = (path, options = {}, token = null) => fetch(path, {
@@ -34,34 +32,6 @@ const productImages = [
   '/assets/products/frame-barlow-kit-1.jpg',
   '/assets/products/frame-desert-kit-1.jpg'
 ];
-const showcaseModel = '/assets/models/9sixty-helmet-pad.glb';
-const showcaseHotspots = [
-  {
-    id: 'surface',
-    title: 'Contoured Helmet Pad',
-    body: 'A broad contact surface spreads load cleanly and helps keep the helmet sitting square on the stand.',
-    x: 62,
-    y: 23,
-    align: 'right'
-  },
-  {
-    id: 'stem',
-    title: 'Rigid Vertical Support',
-    body: 'The upright section is shaped for strength and a controlled fit, keeping the product visually light without feeling fragile.',
-    x: 49,
-    y: 44,
-    align: 'left'
-  },
-  {
-    id: 'mount',
-    title: 'Wall-Mounted Precision',
-    body: 'Countersunk fixings and a compact back plate keep the installation clean, secure and easy to repeat.',
-    x: 38,
-    y: 70,
-    align: 'right'
-  }
-];
-
 const secretFields = [
   ['stripe_secret_key', 'Stripe Secret Key'],
   ['smtp2go_api_key', 'SMTP2GO API Key'],
@@ -263,116 +233,8 @@ function Checkout({ cart, auth, nav }) {
   return <section className="page-wrap checkout"><div><h1>Checkout</h1><form className="form-grid"><input placeholder="Email" defaultValue={auth?.user?.email || ''} /><input placeholder="Full name" /><input placeholder="Phone" /><input placeholder="Address line 1" /><input placeholder="Town/City" /><input placeholder="Postcode" /><button type="button" className="gold" onClick={() => nav('/account')}>Pay With Stripe</button><p className="muted">Stripe Payment Element, Apple Pay and Google Pay hooks are prepared in the API structure.</p></form></div><aside className="summary"><h2>Order Summary</h2><p>Subtotal <strong>{money(subtotal)}</strong></p><p>Shipping <strong>{subtotal >= 70 ? 'Free' : '£5.99'}</strong></p><p><Leaf size={16}/> Trees from this order <strong>{Math.floor(subtotal / 50)}</strong></p></aside></section>;
 }
 
-function Showcase() {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const update = () => {
-      const section = document.querySelector('.showcase');
-      if (!section) return;
-      const rect = section.getBoundingClientRect();
-      const scrollable = Math.max(1, rect.height - window.innerHeight);
-      const next = Math.min(1, Math.max(0, -rect.top / scrollable));
-      setProgress(next);
-    };
-
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-    };
-  }, []);
-
-  const activeIndex = Math.min(showcaseHotspots.length - 1, Math.floor(progress * showcaseHotspots.length));
-
-  return <section className="showcase">
-    <div className="showcase-sticky">
-      <div className="showcase-scene">
-        <Suspense fallback={<div className="model-fallback"><img src={asset(productImages[2])} alt="9SIXTY helmet pad fallback" /></div>}>
-          <Canvas camera={{ position: [0, 0.05, 7.4], fov: 34 }} dpr={[1, 1.8]}>
-            <color attach="background" args={['#101010']} />
-            <ambientLight intensity={1.1} />
-            <directionalLight position={[3, 5, 5]} intensity={2.4} />
-            <directionalLight position={[-5, 2, -2]} intensity={1.1} color="#A6936F" />
-            <ShowcaseModel progress={progress} />
-          </Canvas>
-        </Suspense>
-        <div className="hotspot-layer" aria-hidden="true">
-          {showcaseHotspots.map((spot, index) => <span
-            className={`hotspot-pin ${index === activeIndex ? 'active' : ''}`}
-            key={spot.id}
-            style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
-          />)}
-        </div>
-      </div>
-      <div className="showcase-copy">
-        <span className="eyebrow">3D Product Showcase</span>
-        <h1>Precision From Every Angle</h1>
-        <p>Scroll to rotate the 9SIXTY helmet pad and inspect the design details that make it feel engineered, secure and display-ready.</p>
-        <div className="showcase-progress"><span style={{ width: `${Math.max(8, progress * 100)}%` }} /></div>
-      </div>
-    </div>
-    <div className="showcase-scroll">
-      {showcaseHotspots.map((spot, index) => <article className={`hotspot-card ${spot.align} ${index === activeIndex ? 'active' : ''}`} key={spot.id}>
-        <span className="hotspot-number">0{index + 1}</span>
-        <h2>{spot.title}</h2>
-        <p>{spot.body}</p>
-        <i style={{
-          '--pin-x': `${spot.x}%`,
-          '--pin-y': `${spot.y}%`
-        }} />
-      </article>)}
-    </div>
-  </section>;
-}
-
-function ShowcaseModel({ progress }) {
-  const group = useRef();
-  const gltf = useLoader(GLTFLoader, asset(showcaseModel));
-
-  useEffect(() => {
-    gltf.scene.traverse((child) => {
-      if (child.isMesh) {
-        if (child.name.toLowerCase().includes('cutter')) {
-          child.visible = false;
-          return;
-        }
-
-        child.material = child.material.clone();
-        child.material.color.set('#A6936F');
-        child.material.roughness = 0.62;
-        child.material.metalness = 0.08;
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-    const box = new Box3().makeEmpty();
-    gltf.scene.traverse((child) => {
-      if (child.isMesh && child.visible) {
-        box.expandByObject(child);
-      }
-    });
-    const center = new Vector3();
-    box.getCenter(center);
-    gltf.scene.position.sub(center);
-  }, [gltf]);
-
-  useFrame(() => {
-    if (!group.current) return;
-    group.current.rotation.y += ((-0.72 + progress * 3.15) - group.current.rotation.y) * 0.08;
-    group.current.rotation.x += ((0.18 - progress * 0.3) - group.current.rotation.x) * 0.08;
-    group.current.position.y += ((-0.16 + progress * 0.24) - group.current.position.y) * 0.08;
-    const targetScale = 0.42 + Math.sin(progress * Math.PI) * 0.08;
-    group.current.scale.x += (targetScale - group.current.scale.x) * 0.08;
-    group.current.scale.y += (targetScale - group.current.scale.y) * 0.08;
-    group.current.scale.z += (targetScale - group.current.scale.z) * 0.08;
-  });
-
-  return <group ref={group} rotation={[0.18, -0.72, 0]} position={[0, -0.16, 0]} scale={0.42}>
-    <primitive object={gltf.scene} />
-  </group>;
+function Showcase({ nav }) {
+  return <ProductScrollShowcase nav={nav} />;
 }
 
 function Blog({ nav }) {

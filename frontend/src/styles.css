@@ -2067,3 +2067,120 @@ tr:nth-child(odd) td {
     padding: 22px;
   }
 }
+
+.product-showcase {
+  position: relative;
+  min-height: 420vh;
+  overflow: clip;
+  background:
+    radial-gradient(circle at 68% 34%, rgba(166, 147, 111, .22), transparent 30rem),
+    radial-gradient(circle at 18% 72%, rgba(255, 255, 255, .08), transparent 26rem),
+    #05070d;
+}
+
+.product-showcase__canvas {
+  position: sticky;
+  top: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.product-showcase__sticky-copy {
+  position: fixed;
+  left: max(22px, calc((100vw - 1320px) / 2));
+  top: 50%;
+  z-index: 3;
+  width: min(430px, calc(100vw - 44px));
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.product-showcase__eyebrow {
+  margin: 0 0 18px;
+  color: var(--gold);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.product-showcase__sticky-copy h1 {
+  margin: 0 0 18px;
+  color: var(--white);
+  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-size: clamp(58px, 7vw, 118px);
+  line-height: .88;
+  text-transform: uppercase;
+}
+
+.product-showcase__sticky-copy p {
+  max-width: 390px;
+  color: #c4c6cc;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.product-showcase__button {
+  margin-top: 28px;
+  padding: 17px 28px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--gold);
+  color: #050505;
+  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+
+.product-showcase__scroll-steps {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.product-showcase__step {
+  height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .product-showcase {
+    min-height: 360vh;
+  }
+
+  .product-showcase__sticky-copy {
+    top: auto;
+    bottom: 28px;
+    transform: none;
+  }
+
+  .product-showcase__sticky-copy h1 {
+    font-size: clamp(48px, 16vw, 84px);
+  }
+
+  .product-showcase__sticky-copy p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 620px) {
+  .product-showcase__canvas {
+    height: 74vh;
+  }
+
+  .product-showcase__sticky-copy {
+    position: sticky;
+    top: 74vh;
+    bottom: auto;
+    padding: 22px 18px 34px;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(5, 7, 13, 0), rgba(5, 7, 13, .92) 22%, #05070d 100%);
+  }
+
+  .product-showcase__button {
+    width: 100%;
+  }
+}
