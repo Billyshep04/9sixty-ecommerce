@@ -322,6 +322,12 @@ footer button {
 footer form { 
   display: flex; 
   gap: 12px; 
+  align-items: stretch;
+  --footer-newsletter-height: 54px;
+}
+
+footer form input {
+  height: var(--footer-newsletter-height);
 }
 
 input, textarea, select { 
@@ -342,8 +348,10 @@ footer form button {
   background: #fff; 
   color: #000; 
   border-radius: 8px; 
+  height: var(--footer-newsletter-height);
   padding: 0 24px; 
   font-family: NineSixtyDisplay; 
+  margin: 0;
 }
 
 .legal { 
@@ -1759,15 +1767,16 @@ tr:nth-child(odd) td {
     gap: 10px;
     align-items: stretch;
     max-width: 360px;
+    --footer-newsletter-height: 46px;
   }
 
   footer form input {
-    min-height: 46px;
+    height: var(--footer-newsletter-height);
   }
 
   footer form button {
     min-width: 76px;
-    min-height: 46px;
+    height: var(--footer-newsletter-height);
     margin: 0;
     padding: 0 18px;
     text-align: center;
