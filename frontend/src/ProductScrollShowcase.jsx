@@ -177,13 +177,15 @@ export default function ProductScrollShowcase({ nav }) {
 
   return (
     <section ref={sectionRef} className="product-showcase" aria-label="962 frame product showcase">
-      <canvas ref={canvasRef} className="product-showcase__canvas" />
+      <div className="product-showcase__stage">
+        <canvas ref={canvasRef} className="product-showcase__canvas" />
 
-      <div className="product-showcase__sticky-copy">
-        <p className="product-showcase__eyebrow">{step.kicker}</p>
-        <h1>{step.title}</h1>
-        <p>{step.text}</p>
-        <button type="button" className="product-showcase__button" onClick={() => nav('/shop')}>Shop collection</button>
+        <div className="product-showcase__sticky-copy">
+          <p className="product-showcase__eyebrow">{step.kicker}</p>
+          <h1>{step.title}</h1>
+          <p>{step.text}</p>
+          <button type="button" className="product-showcase__button" onClick={() => nav('/shop')}>Shop collection</button>
+        </div>
       </div>
 
       <div className="product-showcase__scroll-steps" aria-hidden="true">

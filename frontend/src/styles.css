@@ -2078,16 +2078,22 @@ tr:nth-child(odd) td {
     #05070d;
 }
 
-.product-showcase__canvas {
+.product-showcase__stage {
   position: sticky;
   top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.product-showcase__canvas {
   display: block;
   width: 100vw;
   height: 100vh;
 }
 
 .product-showcase__sticky-copy {
-  position: fixed;
+  position: absolute;
   left: max(22px, calc((100vw - 1320px) / 2));
   top: 50%;
   z-index: 3;
@@ -2168,15 +2174,18 @@ tr:nth-child(odd) td {
 
 @media (max-width: 620px) {
   .product-showcase__canvas {
-    height: 74vh;
+    height: 100%;
   }
 
   .product-showcase__sticky-copy {
-    position: sticky;
-    top: 74vh;
-    bottom: auto;
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding: 22px 18px 34px;
     width: 100%;
+    transform: none;
     background: linear-gradient(180deg, rgba(5, 7, 13, 0), rgba(5, 7, 13, .92) 22%, #05070d 100%);
   }
 
