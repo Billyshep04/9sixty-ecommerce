@@ -32,7 +32,7 @@ class StorefrontController extends Controller
     public function home(): JsonResponse
     {
         return response()->json([
-            'featured_products' => Product::query()->with(['category', 'variants'])->where('is_featured', true)->where('is_active', true)->limit(6)->get(),
+            'featured_products' => Product::query()->with(['category', 'variants'])->where('is_featured', true)->where('is_active', true)->latest()->limit(6)->get(),
             'reviews' => Review::query()->with('user:id,name')->where('status', 'approved')->latest()->limit(3)->get(),
             'settings' => $this->publicSettings(),
         ]);
