@@ -180,10 +180,19 @@ function Home({ nav, addToCart }) {
 function Shop({ nav, addToCart }) {
   const [category, setCategory] = useState('All');
   const [colour, setColour] = useState('All');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [products, setProducts] = useState(demoProducts);
   const [categories, setCategories] = useState([{ name: 'Helmet Stands', slug: 'helmet-stands' }, { name: 'Kit Hangers', slug: 'kit-hangers' }, { name: 'Accessories', slug: 'accessories' }]);
   const categorySlug = category === 'All' ? '' : categories.find((item) => item.name === category)?.slug || '';
   const colours = ['All', ...Array.from(new Set(products.flatMap((p) => (p.variants || []).map((v) => v.colour_name)).filter(Boolean)))];
+  const selectCategory = (value) => {
+    setCategory(value);
+    setFiltersOpen(false);
+  };
+  const selectColour = (value) => {
+    setColour(value);
+    setFiltersOpen(false);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -198,7 +207,7 @@ function Shop({ nav, addToCart }) {
       .catch(() => {});
   }, [categorySlug, colour]);
 
-  return <section className="shop-page page-wrap"><aside className="filters"><h4>Category</h4>{['All', ...categories.map((item) => item.name)].map((x) => <button className={category === x ? 'active' : ''} onClick={() => setCategory(x)} key={x}>{x}</button>)}<h4>Color</h4>{colours.map((x) => <button className={colour === x ? 'active' : ''} onClick={() => setColour(x)} key={x}>{x}</button>)}<h4>Price Range</h4>{['All', 'Under £50', '£50 - £100', 'Over £100'].map((x) => <button key={x}>{x}</button>)}</aside><div><h1>Shop Collection</h1><div className="product-grid shop-grid">{products.map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}{!products.length && <p className="muted">No products match those filters.</p>}</div></div></section>;
+  return <section className="shop-page page-wrap"><div className="shop-mobile-head"><h1>Shop Collection</h1><button className="filter-toggle" onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen}>Filters</button></div><aside className={`filters ${filtersOpen ? 'open' : ''}`}><h4>Category</h4>{['All', ...categories.map((item) => item.name)].map((x) => <button className={category === x ? 'active' : ''} onClick={() => selectCategory(x)} key={x}>{x}</button>)}<h4>Color</h4>{colours.map((x) => <button className={colour === x ? 'active' : ''} onClick={() => selectColour(x)} key={x}>{x}</button>)}<h4>Price Range</h4>{['All', 'Under £50', '£50 - £100', 'Over £100'].map((x) => <button onClick={() => setFiltersOpen(false)} key={x}>{x}</button>)}</aside><div className="shop-results"><h1>Shop Collection</h1><div className="product-grid shop-grid">{products.map((p) => <ProductCard key={p.slug} product={p} nav={nav} addToCart={addToCart} />)}{!products.length && <p className="muted">No products match those filters.</p>}</div></div></section>;
 }
 
 function ProductCard({ product: p, nav }) {

@@ -385,6 +385,11 @@ footer form button {
   align-items: start; 
 }
 
+.shop-mobile-head,
+.filter-toggle {
+  display: none;
+}
+
 .filters { 
   position: sticky; 
   top: 110px; 
@@ -1169,12 +1174,43 @@ th {
   .page-wrap { padding: 70px 18px; }
   .shop-page {
     display: grid;
+    grid-template-columns: 1fr;
     gap: 28px;
     padding-top: 48px;
   }
 
-  .shop-page > div {
+  .shop-page > div,
+  .shop-results {
     min-width: 0;
+  }
+
+  .shop-mobile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .shop-mobile-head h1 {
+    margin: 0;
+  }
+
+  .filter-toggle {
+    display: inline-grid;
+    place-items: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 7px;
+    background: var(--gold);
+    color: #080808;
+    font-family: 'Bebas Neue', Impact, sans-serif;
+    font-size: 18px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+  }
+
+  .shop-results > h1 {
+    display: none;
   }
 
   .basket-line { grid-template-columns: 78px 1fr; }
@@ -1766,10 +1802,15 @@ tr:nth-child(odd) td {
   }
 
   .filters {
+    display: none;
+  }
+
+  .filters.open {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     padding: 18px;
+    margin: 0;
   }
 
   .filters h4 {
