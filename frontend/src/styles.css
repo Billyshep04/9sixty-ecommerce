@@ -91,7 +91,7 @@ button {
 }
 
 h1, h2, h3, h4 { 
-  font-family: NineSixtyDisplay, Impact, sans-serif; 
+  font-family: 'Bebas Neue', Impact, sans-serif; 
   text-transform: uppercase; 
   letter-spacing: 2px; 
   margin: 0; 
@@ -160,7 +160,7 @@ p {
   flex-wrap: wrap;
 }
 
-.hero-copy button, .card-actions button, .purchase button, .summary button, .form-grid button, .cta button, .content-card button, .filters button, .tabs button { border-radius: 7px; padding: 14px 24px; text-transform: uppercase; font-family: NineSixtyDisplay, Impact, sans-serif; letter-spacing: 1.5px; background: #fff; color: #080808; }
+.hero-copy button, .card-actions button, .purchase button, .summary button, .form-grid button, .cta button, .content-card button, .filters button, .tabs button { border-radius: 7px; padding: 14px 24px; text-transform: uppercase; font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 1.5px; background: #fff; color: #080808; }
 .gold, .filters .active, .tabs .active, .variant-row .active { 
   background: var(--gold) !important;
   color: #090909 !important; 
@@ -350,7 +350,7 @@ footer form button {
   border-radius: 8px; 
   height: var(--footer-newsletter-height);
   padding: 0 24px; 
-  font-family: NineSixtyDisplay; 
+  font-family: 'Bebas Neue'; 
   margin: 0;
 }
 
@@ -668,7 +668,7 @@ th {
 .admin-panel-head button, .editor button { 
   border-radius: 7px; 
   padding: 13px 18px; 
-  font-family: NineSixtyDisplay, Impact, sans-serif; 
+  font-family: 'Bebas Neue', Impact, sans-serif; 
   text-transform: uppercase;
   letter-spacing: 1.4px; 
 }
@@ -746,7 +746,7 @@ th {
   background: #3a1717;
   color: #fff;
   text-transform: uppercase;
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   letter-spacing: 1.5px;
 }
 
@@ -1078,7 +1078,7 @@ th {
   border-radius: 7px;
   padding: 15px 28px;
   text-transform: uppercase;
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   letter-spacing: 1.5px;
 }
 
@@ -1166,8 +1166,13 @@ th {
 
 /* 9SIXTY visual pass: closer to the supplied dark premium ecommerce screens. */
 @font-face {
-  font-family: NineSixtyDisplay;
-  src: local("Barlow Condensed"), local("Impact");
+  font-family: 'Bebas Neue';
+  src:
+    url('/assets/fonts/BebasNeue-Regular.woff2') format('woff2'),
+    url('/assets/fonts/BebasNeue-Regular.woff') format('woff'),
+    url('/assets/fonts/BebasNeue-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -1383,7 +1388,7 @@ p {
 
 .price-row strong {
   font-size: 27px;
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   letter-spacing: 1px;
 }
 
@@ -1968,7 +1973,7 @@ tr:nth-child(odd) td {
   border: 1px solid rgba(166,147,111,.55);
   border-radius: 50%;
   color: var(--gold);
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   font-size: 20px;
 }
 
@@ -2123,7 +2128,7 @@ tr:nth-child(odd) td {
 .product-showcase__sticky-copy h1 {
   margin: 0 0 18px;
   color: var(--white);
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   font-size: clamp(58px, 7vw, 118px);
   line-height: .88;
   text-transform: uppercase;
@@ -2143,7 +2148,7 @@ tr:nth-child(odd) td {
   border-radius: 7px;
   background: var(--gold);
   color: #050505;
-  font-family: NineSixtyDisplay, Impact, sans-serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   font-size: 16px;
   letter-spacing: 2px;
   text-transform: uppercase;
