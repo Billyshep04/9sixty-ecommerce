@@ -136,12 +136,19 @@ function MaintenancePage({ nav }) {
 function Header({ nav, cart, auth }) {
   const [open, setOpen] = useState(false);
   const links = [['/', 'Home'], ['/shop', 'Shop'], ['/about', 'About'], ['/our-story', 'Our Story']];
-  return <header className="site-header">
-    <button className="mobile-icon" onClick={() => setOpen(!open)} aria-label="Menu"><Menu size={22} /></button>
-    <button className="brand" onClick={() => nav('/')} aria-label="9SIXTY home"><img src={asset('/assets/9sixty-header-logo.svg')} alt="9SIXTY" /></button>
-    <nav className={open ? 'open' : ''}>{links.map(([to, label]) => <button key={to} onClick={() => nav(to)}>{label}</button>)}<button onClick={() => nav('/showcase')}>Showcase</button><button onClick={() => nav('/blog')}>Blog</button></nav>
-    <div className="header-actions"><button onClick={() => nav('/account')} aria-label="Account"><User size={20} /></button><button onClick={() => nav('/basket')} aria-label="Basket"><ShoppingCart size={22} /><span>{cart.length}</span></button></div>
-  </header>;
+  const go = (to) => {
+    nav(to);
+    setOpen(false);
+  };
+  return <>
+    <header className="site-header">
+      <button className="mobile-icon" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}><Menu size={22} /></button>
+      <button className="brand" onClick={() => go('/')} aria-label="9SIXTY home"><img src={asset('/assets/9sixty-header-logo.svg')} alt="9SIXTY" /></button>
+      <nav className={open ? 'open' : ''}>{links.map(([to, label]) => <button key={to} onClick={() => go(to)}>{label}</button>)}<button onClick={() => go('/showcase')}>Showcase</button><button onClick={() => go('/blog')}>Blog</button></nav>
+      <div className="header-actions"><button onClick={() => go('/account')} aria-label="Account"><User size={20} /></button><button onClick={() => go('/basket')} aria-label="Basket"><ShoppingCart size={22} /><span>{cart.length}</span></button></div>
+    </header>
+    {open && <button className="menu-backdrop" aria-label="Close menu" onClick={() => setOpen(false)} />}
+  </>;
 }
 
 function Home({ nav, addToCart }) {
